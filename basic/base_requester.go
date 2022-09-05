@@ -1,6 +1,8 @@
 package basic
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -8,7 +10,7 @@ import (
 )
 
 type IWebpageRequester interface {
-	GetPage(url string) *goquery.Document
+	GetPage(url string) (*goquery.Document, error)
 }
 
 type BasicRequester struct {
@@ -19,7 +21,7 @@ func (requester BasicRequester) SetCookies(CookiesMap map[string]string) {
 	requester.CookiesMap = CookiesMap
 }
 
-func (requester BasicRequester) GetPage(url string) *goquery.Document {
+func (requester BasicRequester) GetPage(url string) (*goquery.Document, error) {
 	var response *http.Response
 	var err error
 
@@ -30,22 +32,26 @@ func (requester BasicRequester) GetPage(url string) *goquery.Document {
 	}
 
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		return nil, err
 	}
 
 	defer response.Body.Close()
 
 	if response.StatusCode != 200 {
-		log.Fatalf("Couldn't fetch data: %d %s\n", response.StatusCode, response.Status)
+		err = errors.New(fmt.Sprintf("Couldn't fetch data: %d %s\n", response.StatusCode, response.Status))
+		log.Print(err)
+		return nil, err
 	}
 
 	document, err := goquery.NewDocumentFromReader(response.Body)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		return nil, err
 	}
 
-	return document
+	return document, nil
 }
 
 func (requester BasicRequester) getRequest(url string) (*http.Response, error) {

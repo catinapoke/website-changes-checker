@@ -6,6 +6,7 @@ type IResultAction interface {
 	OnFirstHash(info ResultInfo)
 	OnHashChanged(info ResultInfo)
 	OnHashUnchanged(info ResultInfo)
+	OnError(info ResultInfo, err error)
 }
 
 type ResultInfo struct {
@@ -26,4 +27,8 @@ func (DebugResultAction) OnHashChanged(info ResultInfo) {
 
 func (DebugResultAction) OnHashUnchanged(info ResultInfo) {
 	fmt.Printf("There is no changes at %s\n", info.Url)
+}
+
+func (DebugResultAction) OnError(info ResultInfo, err error) {
+	fmt.Printf("Caught error while handling %s: %v\n", info.Url, err)
 }

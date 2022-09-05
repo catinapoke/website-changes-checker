@@ -8,7 +8,7 @@ import (
 )
 
 type IHashOperator interface {
-	HandleNewHash(hash string)
+	HandleNewHash(hash string, err error)
 	AddActions(action IResultAction)
 }
 
@@ -17,9 +17,15 @@ type BasicHashOperator struct {
 	Actions []IResultAction
 }
 
-func (x BasicHashOperator) HandleNewHash(hash string) {
+func (x BasicHashOperator) HandleNewHash(hash string, err error) {
 	saved_hash := getSavedHash(x.Url)
 	resultInfo := ResultInfo{Filepath: getFilenameByPagename(x.Url), Hash: hash, Url: x.Url}
+
+	if err != nil {
+		for _, element := range x.Actions {
+			element.OnError(resultInfo, err)
+		}
+	}
 
 	if hash != saved_hash {
 		saveHash(hash, x.Url)
@@ -78,6 +84,6 @@ func saveHash(hash, pagename string) {
 	err := os.WriteFile(filename, []byte(hash), 0644)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 	}
 }
